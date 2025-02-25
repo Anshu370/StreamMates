@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 
 interface User {
   id: string;
@@ -8,63 +8,55 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
+  isAuthenticated: boolean;
+  checkAuth: () => Promise<boolean>;
   login: (email: string, password: string) => Promise<void>;
-  signup: (username: string, email: string, password: string) => Promise<void>;
   logout: () => void;
-  isLoading: boolean;
 }
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  useEffect(() => {
+  const checkAuth = useCallback(async () => {
     const token = localStorage.getItem('token');
-    if (token) {
-      fetchUserProfile(token);
-    } else {
-      setIsLoading(false);
+    if (!token) {
+      setIsAuthenticated(false);
+      setUser(null);
+      return false;
     }
-  }, []);
 
-  const fetchUserProfile = async (token: string) => {
     try {
       const response = await fetch(`${API_URL}/api/auth/profile`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Authorization': `Bearer ${token}`
         }
       });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch profile');
+
+      if (response.ok) {
+        const userData = await response.json();
+        setUser(userData);
+        setIsAuthenticated(true);
+        return true;
+      } else {
+        localStorage.removeItem('token');
+        setIsAuthenticated(false);
+        setUser(null);
+        return false;
       }
-      
-      const userData = await response.json();
-      setUser(userData);
     } catch (error) {
-      console.error('Error fetching user profile:', error);
-      localStorage.removeItem('token');
+      console.error('Auth check failed:', error);
+      setIsAuthenticated(false);
       setUser(null);
-    } finally {
-      setIsLoading(false);
+      return false;
     }
-  };
+  }, []);
 
   const login = async (email: string, password: string) => {
-    setIsLoading(true);
     try {
       const response = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
@@ -75,72 +67,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Login failed');
+        throw new Error('Login failed');
       }
 
       const data = await response.json();
       localStorage.setItem('token', data.token);
-      setUser(data.user);
-      await fetchUserProfile(data.token);
+      await checkAuth();
     } catch (error) {
-      console.error('Login error:', error);
       throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const signup = async (username: string, email: string, password: string) => {
-    setIsLoading(true);
-    try {
-      const requestBody = { username, email, password };
-      console.log('Request payload:', requestBody);
-
-      const response = await fetch(`${API_URL}/api/auth/signup`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      console.log('Response status:', response.status);
-      
-      // Try to get the error details from the response
-      const responseText = await response.text();
-      console.log('Raw response:', responseText);
-      
-      let data;
-      try {
-        data = JSON.parse(responseText);
-      } catch (e) {
-        console.log('Response is not JSON:', responseText);
-      }
-
-      if (!response.ok) {
-        throw new Error(data?.message || `Registration failed with status ${response.status}`);
-      }
-
-      localStorage.setItem('token', data.token);
-      await fetchUserProfile(data.token);
-    } catch (error) {
-      console.error('Detailed signup error:', error);
-      throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const logout = () => {
-    setUser(null);
     localStorage.removeItem('token');
+    setIsAuthenticated(false);
+    setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, checkAuth, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };

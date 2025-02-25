@@ -1,8 +1,12 @@
 const API_URL = import.meta.env.VITE_API_URL;
+console.log('API_URL:', API_URL);
 
 export const createRoom = async (roomData: { name: string; type: string; url?: string }) => {
   const token = localStorage.getItem('token');
   if (!token) throw new Error('No authentication token');
+
+  const fullUrl = `${API_URL}/api/rooms/create`;
+  console.log('Making request to:', fullUrl);
 
   const response = await fetch(`${API_URL}/api/rooms/create`, {
     method: 'POST',

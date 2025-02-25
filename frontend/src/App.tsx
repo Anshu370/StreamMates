@@ -9,6 +9,7 @@ import PageTransition from './components/PageTransition';
 import Login from './components/auth/Login';
 import Signup from './components/auth/Signup';
 import Dashboard from './components/dashboard/Dashboard';
+import Room from './components/Room';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
 function App() {
@@ -42,6 +43,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/room/:roomId" 
+            element={
+              <ProtectedRoute>
+                <Room />
               </ProtectedRoute>
             } 
           />
