@@ -17,12 +17,15 @@ app.use((req, res, next) => {
 
 // Routes
 const authRoutes = require('./routes/auth');
-app.use('/api/auth', authRoutes);
+const roomRoutes = require('./routes/roomRoutes');
 
-// Test route
-app.get('/test', (req, res) => {
-  res.json({ message: 'Server is running' });
-});
+app.use('/api/auth', authRoutes);
+app.use('/api/rooms', roomRoutes);
+
+// // Test route
+// app.get('/test', (req, res) => {
+//   res.json({ message: 'Server is running' });
+// });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -36,18 +39,28 @@ app.use((req, res) => {
   res.status(404).json({ message: 'Page not found' });
 });
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('MongoDB connection error:', err));
-
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log('Available routes:');
-  app._router.stack.forEach(r => {
-    if (r.route && r.route.path) {
-      console.log(`${Object.keys(r.route.methods)} ${r.route.path}`);
-    }
+
+// // Update MongoDB connection
+// mongoose.connect(process.env.MONGO_URI)
+//   .then(() => {
+//     console.log('Connected to MongoDB');
+//     app.listen(PORT, () => {
+//       console.log(`Server running on port ${PORT}`);
+//     });
+//   })
+//   .catch(err => {
+//     console.error('MongoDB connection error:', err);
+//     process.exit(1);
+//   });
+
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+  .then(() => console.log('Connected to MongoDB'))
+  .catch(err => {
+    console.error('MongoDB Connection Error:', err.message);
+    process.exit(1);
   });
-});
+

@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 
 module.exports = (req, res, next) => {
   try {
-    console.log('Auth middleware - headers:', req.headers); // Debug log
+    // console.log('Auth middleware - headers:', req.headers); // Debug log
     
     // Get token from header
     const token = req.header('Authorization')?.replace('Bearer ', '');

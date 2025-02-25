@@ -1,9 +1,10 @@
 const express = require('express');
-const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const auth = require('../middleware/auth'); // Note: path might need adjustment
+const auth = require('../middleware/auth');
+
+const router = express.Router();
 
 // Test route to verify the router is working
 router.get('/test', (req, res) => {
@@ -13,7 +14,7 @@ router.get('/test', (req, res) => {
 // Profile route
 router.get('/profile', auth, async (req, res) => {
   try {
-    console.log('Profile route hit, user ID:', req.user.id); // Debug log
+    // console.log('Profile route hit, user ID:', req.user.id); // Debug log
     const user = await User.findById(req.user.id).select('-password');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -61,7 +62,7 @@ router.post('/login', async (req, res) => {
 
 // Signup route
 router.post('/signup', async (req, res) => {
-  // console.log('Signup request received:', req.body);
+  // console.log('Signup request received:', req.body);  //Debug log
   try {
     const { username, email, password } = req.body;
 
