@@ -47,6 +47,31 @@ router.post("/create", async (req, res) => {
   }
 });
 
+// Join a room
+router.get("/join/:roomId", async (req, res) => {
+  const { roomId } = req.params;
+
+  try {
+    // Check if room exists
+    const room = await Room.findOne({ roomId, active: true });
+    
+    if (!room) {
+      return res.status(404).json({ 
+        success: false, 
+        error: "Room not found or no longer active" 
+      });
+    }
+
+    res.json({ 
+      success: true, 
+      room: room 
+    });
+  } catch (error) {
+    console.error('Server error:', error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 // List all rooms
 // router.get("/", async (req, res) => {
 //   const rooms = await Room.find();

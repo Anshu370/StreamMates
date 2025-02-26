@@ -42,25 +42,36 @@ app.use((req, res) => {
 const PORT = process.env.PORT || 5000;
 
 // // Update MongoDB connection
-// mongoose.connect(process.env.MONGO_URI)
-//   .then(() => {
-//     console.log('Connected to MongoDB');
-//     app.listen(PORT, () => {
-//       console.log(`Server running on port ${PORT}`);
-//     });
-//   })
-//   .catch(err => {
-//     console.error('MongoDB connection error:', err);
-//     process.exit(1);
-//   });
-
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-  .then(() => console.log('Connected to MongoDB'))
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log('Connected to MongoDB');
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  })
   .catch(err => {
-    console.error('MongoDB Connection Error:', err.message);
+    console.error('MongoDB connection error:', err);
     process.exit(1);
   });
+// const connectDB = async () => {
+//   try{
+//     const MONGODB_INSTANCE = await mongoose.connect(process.env.MONGO_URI);
+//     console.log("MongoDB Connected");
+//   }
+//   catch(err){
+//     console.log("MongoDB Connection Error:", err);
+//     process.exit(1);
+//   }
+// }
 
+
+// connectDB()
+// .then(() =>{
+//   app.listen(process.env.PORT || 8888, () => {
+//     console.log(`Server running on port ${process.env.PORT || 8888}`);
+//   })
+// })
+// .catch((err) => {
+//   console.log("MongoDB Connection Error:", err);
+//   process.exit(1);
+// })
